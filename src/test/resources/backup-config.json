@@ -1,0 +1,10 @@
+{
+    "remotePath" : "/Users/Scott/BackupTestDestination",
+    "rootFolders": [
+        {"path":"/Users/Scott/BackupTestSource",
+            "exclude": [
+                "nbproject",
+                ".*\\.class"
+            ]}
+    ]
+}
