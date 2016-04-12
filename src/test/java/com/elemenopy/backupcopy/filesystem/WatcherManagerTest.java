@@ -13,12 +13,9 @@ import org.junit.Test;
  *
  * @author Scott
  */
-public class RootFolderSynchronizerTest {
+public class WatcherManagerTest {
     
     private BackupConfig config;
-    
-    public RootFolderSynchronizerTest() {
-    }
     
     @Before
     public void setUp() {
@@ -26,8 +23,11 @@ public class RootFolderSynchronizerTest {
     }
 
     @Test
-    public void testSync() throws Exception {
-        RootFolderSynchronizer sync = new RootFolderSynchronizer(config.getRemotePath(), config.getRootFolders().get(0));
-//        sync.synchronize();
+    public void testWatchInit() throws Exception {
+        WatcherManager.init(config);
+        System.out.println("WatcherManager.init() returned");
+        Thread.sleep(60000);
+        WatcherManager.stop();
+        Thread.sleep(10000);
     }
 }

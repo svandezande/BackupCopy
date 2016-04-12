@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Scott
  */
+@Deprecated
 public class RootFolderSynchronizer {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -63,7 +64,7 @@ public class RootFolderSynchronizer {
         
         @Override
         public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-            final Path relPath = sourceRoot.relativize(dir);
+            final Path relPath = sourceRoot.getParent().relativize(dir);
             logger.debug("Visiting relative source path {}", relPath);
             
             final String dirName = dir.getFileName().toString();
@@ -89,7 +90,7 @@ public class RootFolderSynchronizer {
 
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-            final Path relPath = sourceRoot.relativize(file);
+            final Path relPath = sourceRoot.getParent().relativize(file);
             logger.debug("Visiting relative source file {}", relPath);
             
             final String dirName = file.getFileName().toString();
@@ -103,7 +104,7 @@ public class RootFolderSynchronizer {
             //not skipping - check for existence in destination
             Path fullDest = destRoot.resolve(relPath);
             boolean copy = false;
-            if(fullDest.toFile().exists()) {
+            if(Files.exists(fullDest)) {
                 //check file size, then timestamp
                 if(Files.size(fullDest) != Files.size(file)
                         || Files.getLastModifiedTime(file).compareTo(Files.getLastModifiedTime(fullDest)) > 0) {
