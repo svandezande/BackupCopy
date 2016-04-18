@@ -15,6 +15,7 @@ import java.nio.file.FileVisitOption;
 import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import static java.nio.file.StandardWatchEventKinds.*;
@@ -44,6 +45,10 @@ public class WatcherManager {
 
     public static void stop() {
         stopped = true;
+    }
+    
+    public static boolean isRunning() {
+        return !stopped;
     }
 
     public static void init(BackupConfig config) throws IOException {
@@ -147,7 +152,12 @@ public class WatcherManager {
                             }
                         } else if (ENTRY_MODIFY.equals(kind) || ENTRY_CREATE.equals(kind)) {
                             logger.debug("Copying to remote file {}", fullRemotePath);
-                            Files.copy(fullPath, fullRemotePath, COPY_ATTRIBUTES, REPLACE_EXISTING);
+                            Files.createDirectories(fullRemotePath.getParent());
+                            try {
+                                Files.copy(fullPath, fullRemotePath, COPY_ATTRIBUTES, REPLACE_EXISTING);
+                            } catch(NoSuchFileException nsf) {
+                                logger.info("File didn't exist when attempted to copy: {}", relPath);
+                            }
                         } else if (ENTRY_DELETE.equals(kind)) {
                             logger.debug("Deleting remote file {}", fullRemotePath);
                             Files.deleteIfExists(fullRemotePath);
@@ -266,8 +276,17 @@ public class WatcherManager {
 
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-            //not skipping - check for existence in destination
+            
+            //see if we should skip this file
             final Path relPath = sourceRoot.getParent().relativize(file);
+            for (String regex : sourceRootFolder.getExclude()) {
+                if (Pattern.matches(regex, file.getFileName().toString()) || Pattern.matches(regex, relPath.toString())) {
+                    logger.debug("Skipping path {} due to exclusion pattern {}", relPath, regex);
+                    return FileVisitResult.CONTINUE;
+                }
+            }
+
+            //not skipping - check for existence in destination
             Path fullDest = remoteRootPath.resolve(relPath);
             Files.createDirectories(fullDest.getParent());
             boolean copy = false;
