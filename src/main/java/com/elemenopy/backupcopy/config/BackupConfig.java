@@ -5,16 +5,19 @@
  */
 package com.elemenopy.backupcopy.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  *
@@ -47,11 +50,16 @@ public class BackupConfig {
         logger.info("Looking for {} at root of classpath...", DEFAULT_CONFIG_FILE);
         BackupConfig config = loadFromClasspath(DEFAULT_CONFIG_FILE);
         if (config == null) {
-            File home = new File(System.getProperty("user.home"));
+            File home = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".backupCopy").toFile();
             logger.info("Config not found in classpath. Looking in {}...", home.getAbsolutePath());
             config = loadFromFileSystem(new File(home, DEFAULT_CONFIG_FILE).getAbsolutePath());
         }
-        if(config == null) logger.warn("Config file {} not found at classpath root or in user home directory.", DEFAULT_CONFIG_FILE);
+        if(config == null) {
+            File workingDir = new File(System.getProperty("user.dir"));
+            logger.info("Config not found in user home. Looking in {}...", workingDir.getAbsolutePath());
+            config = loadFromFileSystem(new File(workingDir, DEFAULT_CONFIG_FILE).getAbsolutePath());
+        }
+        if(config == null) logger.warn("Config file {} not found at classpath root, working dir, or in user home directory.", DEFAULT_CONFIG_FILE);
         return config;
     }
 

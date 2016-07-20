@@ -5,17 +5,23 @@
  */
 package com.elemenopy.backupcopy.ui;
 
-import com.elemenopy.backupcopy.config.BackupConfig;
-import com.elemenopy.backupcopy.filesystem.WatcherManager;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.AWTException;
+import java.awt.Image;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
+import java.awt.SystemTray;
+import java.awt.Toolkit;
+import java.awt.TrayIcon;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.elemenopy.backupcopy.config.BackupConfig;
+import com.elemenopy.backupcopy.filesystem.WatcherManager;
 
 /**
  *
@@ -27,15 +33,10 @@ public class TrayIconUI {
     private static BackupConfig config;
     
     public static void main(String[] args) throws MalformedURLException {
-        try {
-            Path configFile = FileSystems.getDefault().getPath(System.getProperty("user.home"), ".backupCopy", "backup-config.json");
-            if(!Files.exists(configFile)) {
-                Files.createDirectories(configFile.getParent());
-            }
-            config = BackupConfig.loadFromFileSystem(configFile.toString());
-        } catch(IOException e) {
-            logger.error("IOException while loading config file", e);
-            System.exit(1);
+        config = BackupConfig.loadDefault();
+        if(config == null) {
+        	logger.warn("Config not found. Exiting.");
+        	System.exit(1);
         }
                 
         TrayIcon trayIcon = null;

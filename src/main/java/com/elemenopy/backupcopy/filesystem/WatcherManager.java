@@ -5,21 +5,23 @@
  */
 package com.elemenopy.backupcopy.filesystem;
 
-import com.elemenopy.backupcopy.TaskManager;
-import com.elemenopy.backupcopy.config.BackupConfig;
-import com.elemenopy.backupcopy.config.RootFolder;
+import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
+import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
+
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitOption;
-import static java.nio.file.FileVisitOption.FOLLOW_LINKS;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
-import static java.nio.file.StandardWatchEventKinds.*;
-import static java.nio.file.StandardCopyOption.*;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
@@ -27,9 +29,14 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.elemenopy.backupcopy.TaskManager;
+import com.elemenopy.backupcopy.config.BackupConfig;
+import com.elemenopy.backupcopy.config.RootFolder;
 
 /**
  *
@@ -141,6 +148,19 @@ public class WatcherManager {
                             if (ENTRY_CREATE.equals(kind)) {
                                 logger.debug("Creating remote dir {}", fullRemotePath);
                                 copyRecursive(fullPath, fullRemotePath);
+                                
+                                //start watching the new dir
+                                TaskManager.runTask(() -> {
+                                    //traverse the source folder tree, registering subfolders on the watcher
+                                    final WatcherRegisteringFileVisitor visitor = new WatcherRegisteringFileVisitor(rootFolder, watcher);
+
+                                    try {
+                                        EnumSet<FileVisitOption> opts = EnumSet.of(FOLLOW_LINKS);
+                                        Files.walkFileTree(fullPath, opts, Integer.MAX_VALUE, visitor);
+                                    } catch (IOException ex) {
+                                        logger.error("Error while setting up directory watchers for new folder " + fullPath, ex);
+                                    }
+                                });
                             } 
                             else if (ENTRY_DELETE.equals(kind)) {
                                 logger.debug("Deleting remote dir {}", fullRemotePath);
