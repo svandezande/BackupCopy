@@ -34,7 +34,9 @@ public class BackupConfig {
     private String remotePath;
 
     public static BackupConfig loadFromClasspath(String fname) {
-        return loadConfigFile(ClassLoader.getSystemClassLoader().getResourceAsStream(fname));
+    	InputStream is = ClassLoader.getSystemClassLoader().getResourceAsStream(fname);
+    	if(is == null) return null;
+        return loadConfigFile(is);
     }
 
     public static BackupConfig loadFromFileSystem(String path) {
@@ -64,6 +66,7 @@ public class BackupConfig {
     }
 
     private static BackupConfig loadConfigFile(InputStream in) {
+    	if(in == null) return null;
         try {
             ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally
             BackupConfig config = mapper.readValue(in, BackupConfig.class);

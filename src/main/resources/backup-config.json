@@ -1,0 +1,11 @@
+{
+    "remotePath" : "C:/Users/vande/Dropbox/AsusLaptopBackup",
+    "rootFolders": [
+        {"path":"C:/Kerbal Space Program/saves",
+			"remotePath":"C:/Users/vande/Dropbox/AsusLaptopBackup/KSPSaves",
+            "exclude": []},
+        {"path":"C:/Users/vande/Documents",
+			"remotePath":"C:/Users/vande/Dropbox/AsusLaptopBackup",
+            "exclude": []}
+    ]
+}

@@ -12,6 +12,14 @@
     </properties>
     <build>
         <finalName>BackupCopy</finalName>
+        <resources>
+        	<resource>
+        		<directory>src/main/resources</directory>
+        		<excludes>
+        			<exclude>backup-config.json</exclude>
+        		</excludes>
+        	</resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
